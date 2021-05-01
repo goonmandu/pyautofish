@@ -93,7 +93,7 @@ while True:  # forever loop (terminate with KeyboardInterrupt):
     bobber_sound = ImageGrab.grab(bbox=(scan_x1, scan_y1, scan_x2, scan_y2))  # scan for Volume Meter
     bobber_sound_rgb = bobber_sound.convert("RGB")  # convert ImageGrab area to RGB
     r, g, b = bobber_sound_rgb.getpixel((3, 2))  # read pixel RGB values
-    time.sleep(0.02)  # scanning frequency, 0.02 = 50Hz
+    time.sleep(0.02)  # sample rate, 20ms (50Hz)
     if r == 51:  # is sound detected?
         right_click()  # catch fish
         catch_time = time.time()  # end timer
