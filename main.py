@@ -1,9 +1,11 @@
-from PIL import ImageGrab
+print("Preparing detection system... ", end="")
 import time
 from pynput.mouse import Button, Controller
 import keyboard
-import win32api
 import win32con
+import win32api
+from window_image import snapshot
+print("Done.")
 
 mouse = Controller()
 avg_time = 0.0
@@ -18,70 +20,33 @@ catch_number_string = ""
 exit_key = "ctrl"
 mouse_move_dir = True
 
-
 def right_click():
     mouse.press(Button.right)
     mouse.release(Button.right)
 
+hundredpct_coords = ((178, 261), (288, 261), (398, 261))
+mcidx = int(input("Where is Minecraft located in the Volume Mixer? Enter 1-3. ")) - 1
+move_mouse = input("Bypass McMMO's overfishing anti-autofisher? [Y]es/[Any]No: ").lower() in ["yes", "y"]
 
-resolution = int(input("Resolution - 1920 × 1080, enter 0. For 2560 × 1440, enter 1. "))
-window_scaling = int(input("Scaling - 100%, enter 0. For 125%, enter 1. "))
-move_mouse = bool(input("Enter any text to move the mouse while fishing. Skip to not move the mouse. "))
+print("\n\nConfiguration Details:")
+print(f"Key to stop the autofisher: {exit_key.upper()}")
+print(f"Minecraft location in VMix: {mcidx+1}")
+print(f"McMMO Overfishing Bypass: {move_mouse}")
+input("\nPress [Enter] to confirm these settings and start the autofisher. If not, press Ctrl+C to exit.")
 
-if resolution == 0:
-    res = "1920 × 1080"
-    if window_scaling == 0:
-        x1, y1, x2, y2 = 1830, 948, 1832, 951
-        scale = "100%"
-    else:
-        x1, y1, x2, y2 = 1819, 912, 1823, 914
-        scale = "125%"
-else:
-    x1, y1, x2, y2 = 2470, 1309, 2472, 1311
-    res = "2560 × 1440"
-    scale = "100%"
+print("Starting in 5 seconds.")
 
-setup_detect = ImageGrab.grab(bbox=(x1, y1, x2, y2))
-setup_detect_rgb = setup_detect.convert("RGB")
-initial_r, initial_g, initial_b = setup_detect_rgb.getpixel((1, 1))
-
-
-while initial_r != 231:
-    print("Please realign Volume Mixer window. Then, press ENTER to check its position again.")
-    input("Expected R = 231, Detected Value = " + str(initial_r))
-    setup_detect = ImageGrab.grab(bbox=(x1, y1, x2, y2))
-    setup_detect_rgb = setup_detect.convert("RGB")
-    initial_r, initial_g, initial_b = setup_detect_rgb.getpixel((1, 1))
-
-print("Success: Detected R value matches Expected R value.")
-print(f"\nCurrent configuration:\n"
-      f"Resolution:       {res}\n"
-      f"Scale Ratio:      {scale}\n"
-      f"Anti-overfishing: {move_mouse}\n")
-input("Press ENTER to run script")
-print("Executing in 5 seconds... Ctrl + C to quit")
-time.sleep(1)
-print("Executing in 4...")
-time.sleep(1)
-print("Executing in 3...")
-time.sleep(1)
-print("Executing in 2...")
-time.sleep(1)
-print("Executing in 1...")
-time.sleep(1)
+time.sleep(5)
 
 right_click()
-throw_time = time.time()                                        # start timer
+throw_time = time.time()
 time.sleep(1)
-while True:                                                     # forever loop
+while True:
     if keyboard.is_pressed(exit_key):
-        exit(0)
-    bobber_sound = ImageGrab.grab(bbox=(x1, y1, x2, y2))  # scan for Volume Meter
-    bobber_sound_rgb = bobber_sound.convert("RGB")              # convert ImageGrab area to RGB
-    r, g, b = bobber_sound_rgb.getpixel((1, 1))                 # read pixel RGB values
-    time.sleep(0.02)                                            # scanning frequency
-    if r == 51:                                                 # is sound detected?
-        right_click()                                           # catch fish
+        raise Exception(f"Terminated by user: pressed {exit_key.upper()}")
+    snap = snapshot()
+    if snap.getpixel(hundredpct_coords[mcidx])[0] < 231:        # Red-value < 231
+        right_click()                                           # reel in fish
         catch_time = time.time()                                # end timer
         catch_number += 1                                       # increment number of catches by 1
         time_to_catch = catch_time - throw_time                 # end timer and save Δtime.time()
